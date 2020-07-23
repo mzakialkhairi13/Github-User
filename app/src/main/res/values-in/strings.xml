@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name">Github Users Search</string>
+
+    <string name="hint_search">Masukkan Username</string>
+    <string name="list_username">Nama Pengguna</string>
+    <string name="detail_name">NAMA</string>
+    <string name="follower">PENGIKUT</string>
+    <string name="following">MENGIKUTI</string>
+    <string name="url">URL</string>
+    <string name="user_info">Info Pengguna</string>
+    <string name="uuusername">\@Username</string>
+    <string name="name_user">Name User</string>
+    <string name="url_html">url_html</string>
+    <string name="locationn">location</string>
+    <string name="change_language">Tukar Bahasa</string>
+    <string name="about_me">Tentang Saya</string>
+    <string name="please_insert_username">Masukkan username</string>
+    <string name="language">Bahasa</string>
+
+</resources>
