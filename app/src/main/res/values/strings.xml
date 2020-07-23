@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    <string name="app_name" translatable="false">Github Users Search</string>
+
+    <string name="hint_search">Input Username</string>
+    <string name="list_username">Username</string>
+    <string name="detail_name">NAME</string>
+    <string name="follower">FOLLOWER</string>
+    <string name="following">FOLLOWING</string>
+    <string name="url">URL</string>
+    <string name="user_info">User Info</string>
+    <string name="uuusername">\@Username</string>
+    <string name="name_user">Name User</string>
+    <string name="url_html">url_html</string>
+    <string name="locationn">location</string>
+    <string name="change_language">Change Language</string>
+    <string name="about_me">About Me</string>
+    <string name="please_insert_username">Please Insert username</string>
+
+    <string name="language">Language</string>
+
+</resources>
