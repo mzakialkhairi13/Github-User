@@ -3,9 +3,11 @@
     package="com.mzakialkhairi.githubsearch">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
-
+    <permission android:name="com.mzakialkhairi.githubsearch.READ_DATABASE" android:protectionLevel="normal" />
+    <permission android:name="com.mzakialkhairi.githubsearch.WRITE_DATABASE" android:protectionLevel="normal" />
 
     <application
         android:allowBackup="true"
@@ -14,32 +16,40 @@
         android:roundIcon="@drawable/icon_app"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".view.activity.SettingActivity"></activity>
+
+        <activity android:name=".view.activity.SettingActivity" />
         <activity android:name=".view.activity.FavoriteActivity" />
         <activity
             android:name=".view.activity.SplashActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".view.activity.DetailActivity"
             android:screenOrientation="behind"
             android:theme="@style/AppTheme" />
-
         <activity
             android:name=".view.activity.MainActivity"
             android:screenOrientation="behind"
-            android:theme="@style/AppTheme"/>
+            android:theme="@style/AppTheme" />
 
         <receiver
             android:name=".AlarmReceiver"
             android:enabled="true"
             android:exported="true" />
-
+        <provider
+            android:authorities="com.mzakialkhairi.githubsearch"
+            android:name=".provider.GithubProvider"
+            android:exported="true"
+            android:readPermission="com.mzakialkhairi.githubsearch.READ_DATABASE"
+            android:writePermission="com.mzakialkhairi.githubsearch.WRITE_DATABASE" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
     </application>
 
 </manifest>

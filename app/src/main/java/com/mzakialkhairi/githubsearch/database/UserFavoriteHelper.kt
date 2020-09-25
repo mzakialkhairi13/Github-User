@@ -5,10 +5,9 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.provider.BaseColumns
+import android.util.Log
 import com.mzakialkhairi.githubsearch.database.DatabaseContract.UserFavoriteColumns.Companion.TABLE_NAME
 import com.mzakialkhairi.githubsearch.database.DatabaseContract.UserFavoriteColumns.Companion.USERNAME
-import com.mzakialkhairi.githubsearch.model.UserFavorite
-import java.util.ArrayList
 
 class UserFavoriteHelper (context: Context) {
 
@@ -30,12 +29,6 @@ class UserFavoriteHelper (context: Context) {
         database = dataBaseHelper.writableDatabase
     }
 
-    fun close() {
-        dataBaseHelper.close()
-
-        if (database.isOpen)
-            database.close()
-    }
 
     fun queryAll(): Cursor {
         return database.query(
@@ -58,42 +51,26 @@ class UserFavoriteHelper (context: Context) {
             null,
             null,
             null,
-            null
-        )
+            null)
     }
 
     fun insert(values: ContentValues?): Long {
         return database.insert(DATABASE_TABLE, null, values)
     }
 
-    fun deleteUserFavorite(username: String): Int {
-        return database.delete(DATABASE_TABLE, "$USERNAME = '$username'", null)
+    fun deleteUserFavorite(id: String): Int {
+        Log.d("id",id)
+        return database.delete(DATABASE_TABLE, "$USERNAME = '$id'", null)
     }
 
-    fun getAllNotes(): ArrayList<UserFavorite> {
-        val arrayList = ArrayList<UserFavorite>()
-        val cursor = database.query(
-            DATABASE_TABLE, null, null, null, null, null,
-            "${BaseColumns._ID} ASC", null
-        )
-        cursor.moveToFirst()
-        var uf: UserFavorite
-        if (cursor.count > 0) {
-            do {
-                uf = UserFavorite()
-                uf.id = cursor.getInt(cursor.getColumnIndexOrThrow(BaseColumns._ID))
-                uf.username= cursor.getString(cursor.getColumnIndexOrThrow(USERNAME))
 
-                arrayList.add(uf)
-                cursor.moveToNext()
+    fun update(username: String, values: ContentValues?): Int {
+        return database.update(DATABASE_TABLE, values, "$USERNAME = '$username'", arrayOf(username))
 
-            } while (!cursor.isAfterLast)
-        }
-        cursor.close()
-        return arrayList
     }
 
-    fun deleteNote(id: Int): Int {
-        return database.delete(TABLE_NAME, "${BaseColumns._ID} = '$id'", null)
+    fun deleteById(username: String): Int {
+        return database.delete(TABLE_NAME, "$USERNAME = '$username'", null)
     }
+
 }

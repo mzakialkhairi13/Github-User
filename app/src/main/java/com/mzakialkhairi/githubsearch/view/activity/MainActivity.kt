@@ -3,28 +3,43 @@ package com.mzakialkhairi.githubsearch.view.activity
 import android.app.SearchManager
 import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.database.ContentObserver
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Handler
+import android.os.HandlerThread
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.mzakialkhairi.githubsearch.R
+import com.mzakialkhairi.githubsearch.adapter.FavoriteHorizontalAdapter
 import com.mzakialkhairi.githubsearch.adapter.UserItemAdapter
+import com.mzakialkhairi.githubsearch.database.DatabaseContract
 import com.mzakialkhairi.githubsearch.databinding.ActivityMainBinding
+import com.mzakialkhairi.githubsearch.helper.MappingHelper
+import com.mzakialkhairi.githubsearch.model.UserFavorite
 import com.mzakialkhairi.githubsearch.viewmodel.MainViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityMainBinding
     private lateinit var adapter : UserItemAdapter
     private lateinit var mainViewModel: MainViewModel
+    private lateinit var ufAdapter: FavoriteHorizontalAdapter
+
+    companion object{
+        private const val EXTRA_STATE = "EXTRA_STATE"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,24 +47,53 @@ class MainActivity : AppCompatActivity() {
             R.layout.activity_main
         )
 
-        adapter = UserItemAdapter()
+        // show user favorite
+        binding.rvListUsersHorizontal.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
+        binding.rvListUsersHorizontal.setHasFixedSize(true)
+        ufAdapter = FavoriteHorizontalAdapter(this)
+        binding.rvListUsersHorizontal.adapter = ufAdapter
+
+        val handlerThread = HandlerThread("DataObserver")
+        handlerThread.start()
+        val handler = Handler(handlerThread.looper)
+        val myObserver = object : ContentObserver(handler) {
+            override fun onChange(self: Boolean) {
+                loadUsersFavoriteAsync()
+            }
+        }
+        contentResolver.registerContentObserver(DatabaseContract.UserFavoriteColumns.CONTENT_URI, true, myObserver)
+        if (savedInstanceState == null) {
+            loadUsersFavoriteAsync()
+        } else {
+            val list = savedInstanceState.getParcelableArrayList<UserFavorite>(EXTRA_STATE)
+            if (list != null) {
+                ufAdapter.listFavorite = list
+            }
+        }
+
+        //show search user list
+        adapter = UserItemAdapter(this)
         adapter.notifyDataSetChanged()
 
         binding.rvListUsers.layoutManager = LinearLayoutManager(this)
         binding.rvListUsers.adapter = adapter
-
         mainViewModel = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(MainViewModel::class.java)
 
         binding.progressBar.visibility = View.INVISIBLE
-        binding.notifInsert.visibility = View.VISIBLE
+        binding.notifInsertUsername.visibility = View.VISIBLE
 
         mainViewModel.getUsers().observe(this, Observer { userItems ->
             if (userItems != null) {
                 adapter.setData(userItems)
-                binding.notifInsert.visibility = View.GONE
+                binding.notifInsertUsername.visibility = View.GONE
                 showLoading(false)
             }
         })
+
+        binding.selengkapnyaFavorite.setOnClickListener {
+        val intent = Intent(this,FavoriteActivity::class.java)
+            startActivity(intent)
+        }
 
         binding.root
     }
@@ -65,7 +109,7 @@ class MainActivity : AppCompatActivity() {
         searchView.queryHint = resources.getString(R.string.hint_search)
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
-                binding.notifInsert.visibility = View.GONE
+                binding.notifInsertUsername.visibility = View.GONE
                 sendUsername(query)
                 return true
             }
@@ -83,17 +127,13 @@ class MainActivity : AppCompatActivity() {
                 val mIntent = Intent(this,SettingActivity::class.java)
                 startActivity(mIntent)
             }
-            R.id.menu_favorite -> {
-                val mIntent = Intent(this,FavoriteActivity::class.java)
-                startActivity(mIntent)
-            }
         }
         return super.onOptionsItemSelected(item)
     }
 
     private fun sendUsername(username : String){
         if (username.isEmpty()){
-            Toast.makeText(this,"Enter the username correctly", Toast.LENGTH_SHORT).show()
+            showSnackbar("Input username corectly")
         }
         else{
             showLoading(true)
@@ -109,5 +149,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showSnackbar(message : String){
+        Snackbar.make(binding.rvListUsers,message, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun loadUsersFavoriteAsync() {
+        GlobalScope.launch(Dispatchers.Main) {
+            val deferredNotes = async(Dispatchers.IO) {
+                val cursor = contentResolver?.query(DatabaseContract.UserFavoriteColumns.CONTENT_URI, null, null, null, null)
+                MappingHelper.mapCursorToArrayList(cursor)
+            }
+            val ufs = deferredNotes.await()
+            if (ufs.size > 0) {
+                ufAdapter.listFavorite= ufs
+                binding.tvNoFavorite.visibility = View.GONE
+            } else {
+                ufAdapter.listFavorite = ArrayList()
+                binding.rvListUsersHorizontal.visibility = View.GONE
+            }
+        }
+    }
 
 }

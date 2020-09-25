@@ -1,8 +1,12 @@
 package com.mzakialkhairi.githubsearch.database
 
+import android.net.Uri
 import android.provider.BaseColumns
 
-internal class DatabaseContract {
+object DatabaseContract {
+
+    const val AUTHORITY = "com.mzakialkhairi.githubsearch"
+    const val SCHEME = "content"
 
     internal class UserFavoriteColumns : BaseColumns {
 
@@ -11,6 +15,12 @@ internal class DatabaseContract {
             const val _ID = "_id"
             const val USERNAME = "username"
             const val AVATAR = "avatar"
+
+
+            val CONTENT_URI: Uri = Uri.Builder().scheme(SCHEME)
+                .authority(AUTHORITY)
+                .appendPath(TABLE_NAME)
+                .build()
         }
 
     }

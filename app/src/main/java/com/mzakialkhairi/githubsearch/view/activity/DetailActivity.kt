@@ -2,13 +2,13 @@ package com.mzakialkhairi.githubsearch.view.activity
 
 import android.content.ContentValues
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -16,11 +16,13 @@ import com.google.android.material.snackbar.Snackbar
 import com.mzakialkhairi.githubsearch.R
 import com.mzakialkhairi.githubsearch.adapter.SectionPagerAdapter
 import com.mzakialkhairi.githubsearch.database.DatabaseContract
+import com.mzakialkhairi.githubsearch.database.DatabaseContract.UserFavoriteColumns.Companion.CONTENT_URI
 import com.mzakialkhairi.githubsearch.database.UserFavoriteHelper
 import com.mzakialkhairi.githubsearch.databinding.ActivityDetailBinding
 import com.mzakialkhairi.githubsearch.helper.MappingHelper
 import com.mzakialkhairi.githubsearch.model.UserDetail
 import com.mzakialkhairi.githubsearch.model.UserFavorite
+import com.mzakialkhairi.githubsearch.provider.GithubProvider
 import com.mzakialkhairi.githubsearch.viewmodel.DetailViewModel
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.Dispatchers
@@ -32,14 +34,18 @@ class DetailActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityDetailBinding
     private var uFavorite: UserFavorite? = null
-    private lateinit var ufHelper: UserFavoriteHelper
     private var avatar: String? = null
+    private lateinit var uriWithUsername: Uri
+    private lateinit var provider : GithubProvider
+    private lateinit var ufHelper: UserFavoriteHelper
+    private var position: Int = 0
 
     var statusFavorite : Boolean? = false
 
     companion object{
         var username = "username"
         const val EXTRA_NOTE = "extra_note"
+        const val EXTRA_POSITION = "extra_position"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,11 +54,25 @@ class DetailActivity : AppCompatActivity() {
 
         ufHelper = UserFavoriteHelper.getInstance(applicationContext)
         ufHelper.open()
-        uFavorite = intent.getParcelableExtra(EXTRA_NOTE)
-
-        uFavorite = UserFavorite()
-
         val username = intent.getStringExtra(username)
+
+        uFavorite = intent.getParcelableExtra(EXTRA_NOTE)
+        if (uFavorite != null){
+            position = intent.getIntExtra(EXTRA_POSITION,0)
+        }
+
+        //cek favorite
+        cekFavorite(username)
+
+        if (statusFavorite == true) {
+            uriWithUsername = Uri.parse(CONTENT_URI.toString() + "/" + uFavorite?.username)
+            val cursor = contentResolver.query(uriWithUsername, null, null, null, null)
+            if (cursor != null) {
+                uFavorite = MappingHelper.mapCursorToObject(cursor)
+                cursor.close()
+            }
+
+        }
 
         showLoading(true)
         val model = ViewModelProvider(this, ViewModelProvider.NewInstanceFactory()).get(
@@ -67,7 +87,6 @@ class DetailActivity : AppCompatActivity() {
         }
         })
 
-        cekFavorite(username)
 
         binding.viewPager.adapter = SectionPagerAdapter(supportFragmentManager,username)
         binding.tabLayout.setupWithViewPager(binding.viewPager)
@@ -75,15 +94,14 @@ class DetailActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         binding.favoriteButton.setOnClickListener {
-//           avatar?.let { it1 -> showSnackbar(it1) }
-            if (statusFavorite == true){
+            statusFavorite = if (statusFavorite == true){
                 deleteUserFavorite(username)
-                cekFavorite(username)
+                !statusFavorite!!
             }else{
                 setUserFavorite(username)
-                cekFavorite(username)
+                !statusFavorite!!
             }
-
+            cekFavorite(username)
         }
     }
 
@@ -103,10 +121,8 @@ class DetailActivity : AppCompatActivity() {
     private fun showLoading(state: Boolean){
         if (state){
             binding.detailProgressbar.visibility = View.VISIBLE
-            binding.detailContainer.visibility = View.GONE
         }else{
             binding.detailProgressbar.visibility = View.GONE
-            binding.detailContainer.visibility = View.VISIBLE
         }
     }
 
@@ -117,22 +133,16 @@ class DetailActivity : AppCompatActivity() {
         val values = ContentValues()
         values.put(DatabaseContract.UserFavoriteColumns.USERNAME, username)
         values.put(DatabaseContract.UserFavoriteColumns.AVATAR, avatar)
-        val result = ufHelper.insert(values)
-        if (result > 0) {
-            uFavorite?.id = result.toInt()
-            showSnackbar("Berhasil menambahkan ${binding.detailUsername.text} ke daftar favorite")
-        } else {
-            showSnackbar("Gagal menambahkan data")
-        }
+
+        contentResolver.insert(CONTENT_URI, values)
+        showSnackbar("$username ditambahkan ke daftar favorite")
     }
 
     private fun deleteUserFavorite(username : String){
-        val result = ufHelper.deleteUserFavorite(username)
-        if (result > 0) {
-            showSnackbar("Berhasil mengahapus ${binding.detailUsername.text} dari daftar favorite")
-        }else{
-            showSnackbar("Gagal menghapus data")
-        }
+        provider = GithubProvider()
+        provider.deleteUser(username)
+        showSnackbar("$username dihapus dari daftar favorite")
+        
     }
 
     private fun cekFavorite(username : String){
@@ -141,15 +151,14 @@ class DetailActivity : AppCompatActivity() {
                 val cursor = ufHelper.queryByUsername(username)
                 MappingHelper.mapCursorToArrayList(cursor)
             }
-            val ufs = deferredNotes.await()
-            if (ufs.size > 0) {
+            val uf = deferredNotes.await()
+            statusFavorite = if (uf.size > 0) {
                 binding.favoriteButton.setImageResource(R.drawable.faf)
-                statusFavorite = true
+                true
             } else {
                 binding.favoriteButton.setImageResource(R.drawable.faf_border)
-                statusFavorite = false
+                false
             }
-
         }
     }
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

@@ -19,4 +19,8 @@
     <string name="please_insert_username">Please Insert username</string>
     <string name="language">Language</string>
 
+    <string name="you_dont_have_favorite_user">You dont have Favorite user</string>
+    <string name="user_favorite">User Favorite</string>
+    <string name="see_full_list"><![CDATA[See full list >]]></string>
+
 </resources>

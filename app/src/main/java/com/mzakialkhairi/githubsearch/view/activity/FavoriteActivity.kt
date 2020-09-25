@@ -2,16 +2,19 @@ package com.mzakialkhairi.githubsearch.view.activity
 
 import android.app.ActivityOptions
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
+import android.database.ContentObserver
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.view.MenuItem
 import android.view.View
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.mzakialkhairi.githubsearch.R
 import com.mzakialkhairi.githubsearch.adapter.FavoriteAdapter
-import com.mzakialkhairi.githubsearch.database.UserFavoriteHelper
+import com.mzakialkhairi.githubsearch.database.DatabaseContract.UserFavoriteColumns.Companion.CONTENT_URI
 import com.mzakialkhairi.githubsearch.databinding.ActivityFavoriteBinding
 import com.mzakialkhairi.githubsearch.helper.MappingHelper
 import com.mzakialkhairi.githubsearch.model.UserFavorite
@@ -22,8 +25,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class FavoriteActivity : AppCompatActivity() {
+
     private lateinit var adapter: FavoriteAdapter
-    private lateinit var ufHelper: UserFavoriteHelper
     private lateinit var binding: ActivityFavoriteBinding
 
     companion object {
@@ -42,11 +45,19 @@ class FavoriteActivity : AppCompatActivity() {
         rv_favorite.adapter = adapter
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        ufHelper = UserFavoriteHelper.getInstance(applicationContext)
-        ufHelper.open()
+        val handlerThread = HandlerThread("DataObserver")
+        handlerThread.start()
+        val handler = Handler(handlerThread.looper)
+        val myObserver = object : ContentObserver(handler) {
+            override fun onChange(self: Boolean) {
+                loadUsersAsync()
+            }
+        }
+
+        contentResolver.registerContentObserver(CONTENT_URI, true, myObserver)
 
         if (savedInstanceState == null) {
-            loadNotesAsync()
+            loadUsersAsync()
         } else {
             val list = savedInstanceState.getParcelableArrayList<UserFavorite>(EXTRA_STATE)
             if (list != null) {
@@ -55,14 +66,14 @@ class FavoriteActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadNotesAsync() {
+    private fun loadUsersAsync() {
         GlobalScope.launch(Dispatchers.Main) {
             binding.progressBar.visibility = View.VISIBLE
             val deferredNotes = async(Dispatchers.IO) {
-
-                val cursor = ufHelper.queryAll()
+                val cursor = contentResolver?.query(CONTENT_URI, null, null, null, null)
                 MappingHelper.mapCursorToArrayList(cursor)
             }
+
             binding.progressBar.visibility = View.INVISIBLE
             val ufs = deferredNotes.await()
             if (ufs.size > 0) {
@@ -79,10 +90,6 @@ class FavoriteActivity : AppCompatActivity() {
         outState.putParcelableArrayList(EXTRA_STATE, adapter.listFavorite)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        ufHelper.close()
-    }
 
     private fun showSnackbarMessage(message: String) {
         Snackbar.make(rv_favorite, message, Snackbar.LENGTH_SHORT).show()

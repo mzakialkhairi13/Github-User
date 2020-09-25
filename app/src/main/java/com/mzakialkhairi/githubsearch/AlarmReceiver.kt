@@ -1,6 +1,9 @@
 package com.mzakialkhairi.githubsearch
 
-import android.app.*
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -124,7 +127,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
         alarmManager.cancel(pendingIntent)
 
-        Toast.makeText(context, "Notification On", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Notification Off", Toast.LENGTH_SHORT).show()
     }
 
 }

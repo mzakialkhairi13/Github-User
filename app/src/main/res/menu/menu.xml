@@ -10,13 +10,6 @@
         app:showAsAction="always"/>
 
     <item
-        android:id="@+id/menu_favorite"
-        android:title="Favorite"
-        android:icon="@drawable/ic_favorite_black_24dp"
-        app:showAsAction="always"
-        />
-
-    <item
         android:id="@+id/menu_setting"
         android:title="Setting"
         android:icon="@drawable/ic_baseline_settings_24"

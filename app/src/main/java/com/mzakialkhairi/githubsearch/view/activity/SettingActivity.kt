@@ -2,12 +2,11 @@ package com.mzakialkhairi.githubsearch.view.activity
 
 import android.content.Intent
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.DataBindingUtil
 import com.mzakialkhairi.githubsearch.AlarmPrefence
 import com.mzakialkhairi.githubsearch.AlarmReceiver
@@ -15,7 +14,6 @@ import com.mzakialkhairi.githubsearch.Constant
 import com.mzakialkhairi.githubsearch.R
 import com.mzakialkhairi.githubsearch.databinding.ActivitySettingBinding
 import com.mzakialkhairi.githubsearch.model.AlarmReminder
-import java.util.*
 
 class SettingActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -32,11 +30,7 @@ class SettingActivity : AppCompatActivity(), View.OnClickListener {
 
         supportActionBar?.title = "Setting"
 
-        val primaryLocale: Locale = applicationContext.resources.configuration.locales[0]
-        val locale: String = primaryLocale.displayName
-
         alarmPrefence = AlarmPrefence(this)
-        binding.tvLanguage.text = locale
 
         alarmReceiver = AlarmReceiver()
 
@@ -46,10 +40,6 @@ class SettingActivity : AppCompatActivity(), View.OnClickListener {
             var statusAlarm = alarmModel.isTrue
             statusAlarm = !statusAlarm
             setAlarm(statusAlarm)
-        }
-
-        binding.test.setOnClickListener {
-            setAlarm(true)
         }
 
         binding.settingLocale.setOnClickListener(this)

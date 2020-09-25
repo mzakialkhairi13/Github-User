@@ -19,4 +19,8 @@
     <string name="please_insert_username">Masukkan username</string>
     <string name="language">Bahasa</string>
 
+    <string name="you_dont_have_favorite_user">Anda tidak mempunya pengguna favorite</string>
+    <string name="user_favorite">Pengguna Favorit</string>
+    <string name="see_full_list"><![CDATA[Lihat Semua Data >]]></string>
+
 </resources>

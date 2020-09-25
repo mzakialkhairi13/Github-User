@@ -3,7 +3,7 @@ package com.mzakialkhairi.githubsearch.helper
 import android.database.Cursor
 import com.mzakialkhairi.githubsearch.database.DatabaseContract
 import com.mzakialkhairi.githubsearch.model.UserFavorite
-import java.util.ArrayList
+import java.util.*
 
 object MappingHelper {
 
@@ -19,5 +19,18 @@ object MappingHelper {
             }
         }
         return ufList
+    }
+
+    fun mapCursorToObject(ufCursor: Cursor?): UserFavorite {
+        var uf = UserFavorite()
+        ufCursor?.apply {
+            moveToFirst()
+            val id = getInt(getColumnIndexOrThrow(DatabaseContract.UserFavoriteColumns._ID))
+            val username = getString(getColumnIndexOrThrow(DatabaseContract.UserFavoriteColumns.USERNAME))
+            val avatar = getString(getColumnIndexOrThrow(DatabaseContract.UserFavoriteColumns.AVATAR))
+
+            uf = UserFavorite(id, username, avatar)
+        }
+        return uf
     }
 }

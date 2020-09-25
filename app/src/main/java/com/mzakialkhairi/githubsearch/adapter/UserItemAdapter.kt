@@ -1,19 +1,21 @@
 package com.mzakialkhairi.githubsearch.adapter
 
+import android.app.Activity
 import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.mzakialkhairi.githubsearch.CustomOnItemClickListener
 import com.mzakialkhairi.githubsearch.R
 import com.mzakialkhairi.githubsearch.model.UserItems
 import com.mzakialkhairi.githubsearch.view.activity.DetailActivity
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.list_users.view.*
 
-class UserItemAdapter : RecyclerView.Adapter<UserItemAdapter.UserViewHolder>() {
+class UserItemAdapter (private val activity: Activity) : RecyclerView.Adapter<UserItemAdapter.UserViewHolder>() {
 
-    private val mData = ArrayList<UserItems>()
+    var mData = ArrayList<UserItems>()
 
     fun setData(items: ArrayList<UserItems>) {
         mData.clear()
@@ -33,15 +35,6 @@ class UserItemAdapter : RecyclerView.Adapter<UserItemAdapter.UserViewHolder>() {
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) {
         holder.bind(mData[position])
-        val mContext = holder.itemView.context
-
-        val username = mData.get(position).username.toString()
-
-        holder.itemView.setOnClickListener {
-            val intent = Intent(mContext, DetailActivity::class.java)
-            intent.putExtra(DetailActivity.username, username)
-            mContext.startActivity(intent)
-        }
     }
 
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -52,7 +45,24 @@ class UserItemAdapter : RecyclerView.Adapter<UserItemAdapter.UserViewHolder>() {
                 Picasso.with(context)
                     .load(userItems.avatar)
                     .into(userlist_image)
+
+                cv_container.setOnClickListener(
+                    CustomOnItemClickListener(
+                        adapterPosition,
+                        object : CustomOnItemClickListener.OnItemClickCallback {
+                            override fun onItemClicked(view: View, position: Int) {
+                                val intent = Intent(activity, DetailActivity::class.java)
+                                intent.putExtra(DetailActivity.username, userItems.username)
+                                intent.putExtra(DetailActivity.EXTRA_POSITION,position)
+                                intent.putExtra(DetailActivity.EXTRA_NOTE,userItems.username)
+                                activity.startActivity(intent)
+
+                            }
+                        })
+                )
+
             }
         }
     }
 }
+
